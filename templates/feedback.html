@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Feedback{% endblock %}
+{% block breadcrumb_name %}Feedback{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+            <h2 class="text-2xl font-bold text-white">Share Your Feedback</h2>
+            <p class="text-blue-100">Help us improve ML Playground with your suggestions</p>
+        </div>
+        
+        <div class="p-6">
+            <form action="{{ url_for('feedback') }}" method="POST" class="space-y-6">
+                <!-- Feedback Type -->
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">Feedback Type</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="radio" name="feedback_type" value="suggestion" class="form-radio text-blue-600 h-5 w-5">
+                            <div class="ml-3">
+                                <span class="font-medium text-gray-900">Suggestion</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="radio" name="feedback_type" value="bug" class="form-radio text-blue-600 h-5 w-5">
+                            <div class="ml-3">
+                                <span class="font-medium text-gray-900">Bug Report</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                            <input type="radio" name="feedback_type" value="praise" class="form-radio text-blue-600 h-5 w-5">
+                            <div class="ml-3">
+                                <span class="font-medium text-gray-900">Praise</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Feedback Area -->
+                <div>
+                    <label for="feedback" class="block text-gray-700 font-bold mb-2">Your Feedback</label>
+                    <textarea id="feedback" name="feedback" rows="6" 
+                              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Please share your thoughts, suggestions, or report any issues you've encountered..."></textarea>
+                </div>
+                
+                <!-- Contact Info (Optional) -->
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800">Contact Information (Optional)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block text-gray-700 font-medium mb-2">Name</label>
+                            <input type="text" id="name" name="name" 
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+                            <input type="email" id="email" name="email" 
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex justify-center pt-4">
+                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:opacity-90 transition-opacity">
+                        Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- FAQ Section -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="p-6">
+            <h3 class="text-xl font-bold mb-6 text-gray-800">Frequently Asked Questions</h3>
+            
+            <div class="space-y-4" x-data="{ activeQuestion: null }">
+                <div class="border rounded-lg overflow-hidden">
+                    <button @click="activeQuestion = activeQuestion === 1 ? null : 1" 
+                            class="flex justify-between items-center w-full p-4 text-left font-medium hover:bg-gray-50 transition-colors">
+                        <span>How can I report a bug?</span>
+                        <i :class="activeQuestion === 1 ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-500"></i>
+                    </button>
+                    <div x-show="activeQuestion === 1" x-collapse>
+                        <div class="p-4 bg-gray-50 border-t">
+                            <p class="text-gray-600">
+                                Select "Bug Report" in the feedback type, and provide as much detail as possible about the issue, 
+                                including steps to reproduce, expected behavior, and actual behavior.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg overflow-hidden">
+                    <button @click="activeQuestion = activeQuestion === 2 ? null : 2" 
+                            class="flex justify-between items-center w-full p-4 text-left font-medium hover:bg-gray-50 transition-colors">
+                        <span>How do I suggest a new feature?</span>
+                        <i :class="activeQuestion === 2 ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-500"></i>
+                    </button>
+                    <div x-show="activeQuestion === 2" x-collapse>
+                        <div class="p-4 bg-gray-50 border-t">
+                            <p class="text-gray-600">
+                                Choose "Suggestion" as the feedback type and describe the feature you'd like to see. 
+                                Explain why it would be valuable and how you envision it working.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg overflow-hidden">
+                    <button @click="activeQuestion = activeQuestion === 3 ? null : 3" 
+                            class="flex justify-between items-center w-full p-4 text-left font-medium hover:bg-gray-50 transition-colors">
+                        <span>Will I receive a response to my feedback?</span>
+                        <i :class="activeQuestion === 3 ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-500"></i>
+                    </button>
+                    <div x-show="activeQuestion === 3" x-collapse>
+                        <div class="p-4 bg-gray-50 border-t">
+                            <p class="text-gray-600">
+                                If you provide your email address, we'll do our best to respond to your feedback, 
+                                especially for bug reports or detailed feature requests. However, we may not be able 
+                                to respond to every submission.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

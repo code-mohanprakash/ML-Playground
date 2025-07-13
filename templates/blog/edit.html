@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Post - ML Playground Blog{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-gray-50 to-white min-h-screen py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-10 text-center">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Edit Article</h1>
+            <p class="text-lg text-gray-600">Update your article content and settings</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <form method="POST" enctype="multipart/form-data" class="p-8">
+                <!-- Title -->
+                <div class="mb-6">
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                    <input type="text" name="title" id="title" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                           placeholder="Enter a descriptive title for your article"
+                           value="{{ post.title }}">
+                </div>
+
+                <!-- Excerpt -->
+                <div class="mb-6">
+                    <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">Excerpt</label>
+                    <textarea name="excerpt" id="excerpt" rows="3" required
+                              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                              placeholder="Write a brief summary of your article (will appear in previews)">{{ post.excerpt }}</textarea>
+                </div>
+
+                <!-- Category -->
+                <div class="mb-6">
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select name="category" id="category" required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if category == post.category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-6">
+                    <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                    <input type="text" name="tags" id="tags"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                           placeholder="Enter tags separated by commas (e.g., MachineLearning, Python, DataScience)"
+                           value="{{ post.tags|join(', ') }}">
+                    <p class="mt-1 text-sm text-gray-500">Tags help readers find your content. Separate multiple tags with commas.</p>
+                </div>
+
+                <!-- Featured Image -->
+                <div class="mb-6">
+                    <label for="image" class="block text-sm font-medium text-gray-700 mb-2">Featured Image</label>
+                    <div class="flex items-center">
+                        <div class="flex-grow">
+                            <input type="file" name="image" id="image" accept="image/*"
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                            <div id="image-preview" class="h-20 w-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                                <img src="{{ post.image }}" class="h-full w-full object-cover rounded-lg" alt="Current featured image">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Current image shown. Upload a new one to replace it.</p>
+                </div>
+
+                <!-- Content -->
+                <div class="mb-8">
+                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                    <div class="border border-gray-300 rounded-lg overflow-hidden">
+                        <!-- Simple toolbar -->
+                        <div class="bg-gray-50 border-b border-gray-300 p-2 flex flex-wrap gap-2">
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('bold')">
+                                <i class="fas fa-bold"></i>
+                            </button>
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('italic')">
+                                <i class="fas fa-italic"></i>
+                            </button>
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('h2')">
+                                <i class="fas fa-heading"></i>
+                            </button>
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('ul')">
+                                <i class="fas fa-list-ul"></i>
+                            </button>
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('ol')">
+                                <i class="fas fa-list-ol"></i>
+                            </button>
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('link')">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button type="button" class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100" onclick="formatText('code')">
+                                <i class="fas fa-code"></i>
+                            </button>
+                        </div>
+                        <textarea name="content" id="content" rows="15" required
+                                  class="w-full px-4 py-3 border-0 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                                  placeholder="Write your article content here. You can use HTML for formatting.">{{ post.content }}</textarea>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">You can use HTML tags for formatting. The editor above provides basic formatting options.</p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <a href="{{ url_for('blog.post', post_id=post.id) }}" class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors mr-4">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+                        Update Article
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple editor functions
+    function formatText(format) {
+        const textarea = document.getElementById('content');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        let replacement = '';
+        
+        switch(format) {
+            case 'bold':
+                replacement = `<strong>${selectedText}</strong>`;
+                break;
+            case 'italic':
+                replacement = `<em>${selectedText}</em>`;
+                break;
+            case 'h2':
+                replacement = `<h2>${selectedText}</h2>`;
+                break;
+            case 'ul':
+                if (selectedText.includes('\n')) {
+                    const lines = selectedText.split('\n');
+                    replacement = '<ul>\n' + lines.map(line => `    <li>${line}</li>`).join('\n') + '\n</ul>';
+                } else {
+                    replacement = `<ul>\n    <li>${selectedText}</li>\n</ul>`;
+                }
+                break;
+            case 'ol':
+                if (selectedText.includes('\n')) {
+                    const lines = selectedText.split('\n');
+                    replacement = '<ol>\n' + lines.map(line => `    <li>${line}</li>`).join('\n') + '\n</ol>';
+                } else {
+                    replacement = `<ol>\n    <li>${selectedText}</li>\n</ol>`;
+                }
+                break;
+            case 'link':
+                const url = prompt('Enter URL:', 'https://');
+                if (url) {
+                    replacement = `<a href="${url}">${selectedText || url}</a>`;
+                } else {
+                    return;
+                }
+                break;
+            case 'code':
+                if (selectedText.includes('\n')) {
+                    replacement = `<pre><code>${selectedText}</code></pre>`;
+                } else {
+                    replacement = `<code>${selectedText}</code>`;
+                }
+                break;
+        }
+        
+        textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + replacement.length;
+    }
+    
+    // Image preview
+    document.getElementById('image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('image-preview');
+                preview.innerHTML = `<img src="${e.target.result}" class="h-full w-full object-cover rounded-lg">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %} 

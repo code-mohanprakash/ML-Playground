@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Community - Blog Feed{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Community</h5>
+                    <div class="list-group">
+                        <a href="{{ url_for('community.index') }}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('community.create_blog') }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-edit"></i> Write a Blog
+                        </a>
+                        {% endif %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <i class="fas fa-fire"></i> Trending
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-6">
+            {% if current_user.is_authenticated %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form action="{{ url_for('community.create_blog') }}" method="get">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ current_user.profile_picture or url_for('static', filename='img/default-avatar.png') }}" 
+                                 class="rounded-circle me-3" style="width: 48px; height: 48px;" alt="Profile Picture">
+                            <button type="submit" class="form-control text-start text-muted" 
+                                    style="height: 50px; border-radius: 25px;">
+                                What's on your mind, {{ current_user.username }}?
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Blog Feed -->
+            {% for blog in blogs.items %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ blog.author.profile_picture or url_for('static', filename='img/default-avatar.png') }}" 
+                             class="rounded-circle me-2" style="width: 40px; height: 40px;" alt="Author Picture">
+                        <div>
+                            <h6 class="mb-0">{{ blog.author.username }}</h6>
+                            <small class="text-muted">{{ blog.created_at.strftime('%B %d, %Y') }}</small>
+                        </div>
+                    </div>
+                    <h5 class="card-title">
+                        <a href="{{ url_for('community.view_blog', slug=blog.slug) }}" class="text-decoration-none text-dark">
+                            {{ blog.title }}
+                        </a>
+                    </h5>
+                    <p class="card-text">{{ blog.preview_content }}</p>
+                    {% if blog.hashtags %}
+                    <div class="mb-3">
+                        {% for hashtag in blog.hashtags %}
+                        <a href="{{ url_for('community.hashtag_view', name=hashtag.name) }}" 
+                           class="text-decoration-none me-2">
+                            #{{ hashtag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary like-btn" 
+                                    data-blog-id="{{ blog.id }}"
+                                    data-liked="{{ 'true' if current_user.is_authenticated and blog in current_user.liked_blogs else 'false' }}">
+                                <i class="fas fa-heart"></i>
+                                <span class="like-count">{{ blog.likes|length }}</span>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-comment"></i>
+                                {{ blog.comments|length }}
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                        type="button" id="shareDropdown{{ blog.id }}" 
+                                        data-bs-toggle="dropdown" 
+                                        aria-expanded="false">
+                                    <i class="fas fa-share"></i>
+                                    Share
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="shareDropdown{{ blog.id }}">
+                                    <li>
+                                        <a class="dropdown-item share-btn" href="#" 
+                                           data-blog-id="{{ blog.id }}" 
+                                           data-platform="twitter">
+                                            <i class="fab fa-twitter"></i> Twitter
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item share-btn" href="#" 
+                                           data-blog-id="{{ blog.id }}" 
+                                           data-platform="linkedin">
+                                            <i class="fab fa-linkedin"></i> LinkedIn
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item share-btn" href="#" 
+                                           data-blog-id="{{ blog.id }}" 
+                                           data-platform="facebook">
+                                            <i class="fab fa-facebook"></i> Facebook
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-eye"></i> {{ blog.views }}
+                            · {{ blog.reading_time }} min read
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if blogs.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% for page in range(1, blogs.pages + 1) %}
+                    <li class="page-item {{ 'active' if page == blogs.page else '' }}">
+                        <a class="page-link" href="{{ url_for('community.index', page=page) }}">{{ page }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3">
+            <!-- Trending Hashtags -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Trending Topics</h5>
+                    {% for hashtag in trending_hashtags %}
+                    <div class="mb-2">
+                        <a href="{{ url_for('community.hashtag_view', name=hashtag.name) }}" 
+                           class="text-decoration-none">
+                            #{{ hashtag.name }}
+                        </a>
+                        <small class="text-muted">
+                            · {{ hashtag.blogs|length }} posts
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Who to Follow -->
+            {% if current_user.is_authenticated %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Who to Follow</h5>
+                    <!-- Add suggested users here -->
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Like and Share functionality -->
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Like functionality
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+            if (!{{ 'true' if current_user.is_authenticated else 'false' }}) {
+                window.location.href = "{{ url_for('auth.login') }}";
+                return;
+            }
+            
+            const blogId = this.dataset.blogId;
+            const response = await fetch(`/api/like/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const data = await response.json();
+            this.querySelector('.like-count').textContent = data.likes;
+            
+            if (data.action === 'liked') {
+                this.classList.add('active');
+            } else {
+                this.classList.remove('active');
+            }
+        });
+    });
+
+    // Share functionality
+    document.querySelectorAll('.share-btn').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!{{ 'true' if current_user.is_authenticated else 'false' }}) {
+                window.location.href = "{{ url_for('auth.login') }}";
+                return;
+            }
+            
+            const blogId = this.dataset.blogId;
+            const platform = this.dataset.platform;
+            
+            const response = await fetch(`/api/share/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ platform })
+            });
+            
+            const data = await response.json();
+            // Update share count if needed
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

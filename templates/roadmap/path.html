@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}{{ career_path.name|replace('-', ' ')|title }} Roadmap - ML Playground{% endblock %}
+
+{% block head %}
+<style>
+    .milestone-card {
+        transition: all 0.3s ease;
+    }
+    
+    .milestone-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .milestone-connector {
+        position: absolute;
+        left: 50%;
+        width: 2px;
+        background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+        transform: translateX(-50%);
+        z-index: 0;
+    }
+    
+    .milestone-dot {
+        position: absolute;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #3b82f6;
+        transform: translateX(-50%);
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+    
+    .milestone-dot.completed {
+        background-color: #10b981;
+    }
+    
+    .milestone-dot.in-progress {
+        background-color: #f59e0b;
+    }
+    
+    .milestone-dot.not-started {
+        background-color: #6b7280;
+    }
+    
+    .milestone-dot:hover {
+        transform: translateX(-50%) scale(1.2);
+    }
+    
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(to right, #3b82f6, #8b5cf6);
+        transition: width 1s ease-in-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fadeInUp {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-8 text-sm" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li>
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700">Home</a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <a href="{{ url_for('roadmap.index') }}" class="ml-2 text-gray-500 hover:text-gray-700">Roadmaps</a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="ml-2 text-gray-900 font-medium">{{ career_path.name|replace('-', ' ')|title }}</span>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-12 text-center" data-aos="fade-up">
+        <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+            <i class="fas fa-{{ career_path.icon }} text-3xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ career_path.name|replace('-', ' ')|title }} Roadmap</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">{{ career_path.description }}</p>
+    </div>
+    
+    <!-- Progress Overview -->
+    {% if current_user.is_authenticated %}
+    <div class="mb-12 bg-white rounded-xl shadow-sm p-6" data-aos="fade-up" data-aos-delay="100">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Your Progress</h2>
+        <div class="mb-4">
+            {% set completed = namespace(count=0) %}
+            {% for milestone in milestones %}
+                {% if user_progress.get(milestone.id) == 'completed' %}
+                    {% set completed.count = completed.count + 1 %}
+                {% endif %}
+            {% endfor %}
+            
+            {% set progress_percentage = (completed.count / milestones|length * 100)|int %}
+            
+            <div class="flex items-center mb-2">
+                <div class="text-3xl font-bold text-blue-600 mr-2">{{ progress_percentage }}%</div>
+                <div class="text-gray-600">Complete</div>
+            </div>
+            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-4">
+            <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                <span class="text-sm text-gray-600">Completed: {{ completed.count }}</span>
+            </div>
+            <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                <span class="text-sm text-gray-600">In Progress: 
+                    {% set in_progress = namespace(count=0) %}
+                    {% for milestone in milestones %}
+                        {% if user_progress.get(milestone.id) == 'in_progress' %}
+                            {% set in_progress.count = in_progress.count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ in_progress.count }}
+                </span>
+            </div>
+            <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full bg-gray-500 mr-2"></div>
+                <span class="text-sm text-gray-600">Not Started: 
+                    {{ milestones|length - completed.count - in_progress.count }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Milestones Timeline -->
+    <div class="relative">
+        <!-- Vertical Timeline Connector -->
+        <div class="milestone-connector top-0 bottom-0 hidden md:block"></div>
+        
+        <!-- Milestones -->
+        <div class="space-y-12">
+            {% for milestone in milestones %}
+                {% set status = user_progress.get(milestone.id, 'not_started') %}
+                {% set delay = loop.index0 * 100 %}
+                
+                <div class="relative" data-aos="fade-up" data-aos-delay="{{ delay }}">
+                    <!-- Timeline Dot -->
+                    <div class="milestone-dot {{ status }} hidden md:block" style="top: 50%"></div>
+                    
+                    <!-- Milestone Card -->
+                    <div class="milestone-card bg-white rounded-xl shadow-sm overflow-hidden md:ml-12 relative z-10">
+                        <div class="p-6">
+                            <div class="flex flex-wrap items-start justify-between mb-4">
+                                <div>
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold text-lg mr-3">
+                                            {{ loop.index }}
+                                        </span>
+                                        <h3 class="text-xl font-bold text-gray-900">{{ milestone.title }}</h3>
+                                    </div>
+                                    <p class="text-gray-600 mb-4">{{ milestone.description }}</p>
+                                </div>
+                                
+                                {% if current_user.is_authenticated %}
+                                <div class="flex-shrink-0 mt-2 md:mt-0">
+                                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                                        <button type="button" 
+                                                class="progress-btn px-4 py-2 text-sm font-medium rounded-l-lg border {% if status == 'not_started' %}bg-gray-100 text-gray-700{% else %}bg-gray-50 text-gray-500{% endif %} hover:bg-gray-100"
+                                                data-status="not_started"
+                                                data-milestone-id="{{ milestone.id }}">
+                                            Not Started
+                                        </button>
+                                        <button type="button" 
+                                                class="progress-btn px-4 py-2 text-sm font-medium border-t border-b {% if status == 'in_progress' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-50 text-gray-500{% endif %} hover:bg-yellow-100"
+                                                data-status="in_progress"
+                                                data-milestone-id="{{ milestone.id }}">
+                                            In Progress
+                                        </button>
+                                        <button type="button" 
+                                                class="progress-btn px-4 py-2 text-sm font-medium rounded-r-lg border {% if status == 'completed' %}bg-green-100 text-green-700{% else %}bg-gray-50 text-gray-500{% endif %} hover:bg-green-100"
+                                                data-status="completed"
+                                                data-milestone-id="{{ milestone.id }}">
+                                            Completed
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-4 mb-4">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-clock mr-2 text-blue-500"></i>
+                                    {{ milestone.duration }}
+                                </div>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-signal mr-2 text-blue-500"></i>
+                                    {{ milestone.difficulty }}
+                                </div>
+                            </div>
+                            
+                            <a href="{{ url_for('roadmap.show_milestone', path_name=career_path.name, milestone_id=milestone.id) }}" 
+                               class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                                View Details
+                                <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress buttons
+    const progressButtons = document.querySelectorAll('.progress-btn');
+    
+    progressButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const milestoneId = this.getAttribute('data-milestone-id');
+            const status = this.getAttribute('data-status');
+            
+            // Update UI immediately for better UX
+            const buttonGroup = this.parentElement;
+            buttonGroup.querySelectorAll('.progress-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-100', 'bg-yellow-100', 'bg-green-100', 'text-gray-700', 'text-yellow-700', 'text-green-700');
+                btn.classList.add('bg-gray-50', 'text-gray-500');
+            });
+            
+            if (status === 'not_started') {
+                this.classList.remove('bg-gray-50', 'text-gray-500');
+                this.classList.add('bg-gray-100', 'text-gray-700');
+            } else if (status === 'in_progress') {
+                this.classList.remove('bg-gray-50', 'text-gray-500');
+                this.classList.add('bg-yellow-100', 'text-yellow-700');
+            } else if (status === 'completed') {
+                this.classList.remove('bg-gray-50', 'text-gray-500');
+                this.classList.add('bg-green-100', 'text-green-700');
+            }
+            
+            // Update milestone dot
+            const milestoneContainer = this.closest('.relative');
+            const milestoneDot = milestoneContainer.querySelector('.milestone-dot');
+            if (milestoneDot) {
+                milestoneDot.classList.remove('not-started', 'in-progress', 'completed');
+                milestoneDot.classList.add(status);
+            }
+            
+            // Send update to server
+            fetch('{{ url_for("roadmap.update_progress") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    'milestone_id': milestoneId,
+                    'status': status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Progress updated successfully');
+                    // Reload page to update progress bar
+                    window.location.reload();
+                } else {
+                    console.error('Error updating progress:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

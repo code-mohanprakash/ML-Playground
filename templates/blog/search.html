@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results: {{ query }} - ML Playground Blog{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-gray-50 to-white min-h-screen">
+    <!-- Search Header -->
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="max-w-3xl mx-auto">
+                <h1 class="text-2xl font-bold text-gray-900 mb-6">Search Results</h1>
+                
+                <!-- Search Form -->
+                <form action="{{ url_for('blog.search') }}" method="get" class="mb-8">
+                    <div class="flex rounded-lg shadow-sm">
+                        <input type="text" name="q" value="{{ query }}" 
+                               class="flex-grow px-4 py-3 rounded-l-lg border-y border-l border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:outline-none"
+                               placeholder="Search for articles...">
+                        <button type="submit" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-r-lg hover:bg-primary-700 transition-colors">
+                            <i class="fas fa-search mr-2"></i> Search
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Search Stats -->
+                <div class="text-gray-600 mb-8">
+                    {% if results|length == 0 %}
+                        No results found for <span class="font-medium text-gray-900">"{{ query }}"</span>
+                    {% elif results|length == 1 %}
+                        1 result found for <span class="font-medium text-gray-900">"{{ query }}"</span>
+                    {% else %}
+                        {{ results|length }} results found for <span class="font-medium text-gray-900">"{{ query }}"</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-3xl mx-auto">
+            {% if results|length > 0 %}
+                <div class="space-y-8">
+                    {% for post in results %}
+                    <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300">
+                        <a href="{{ url_for('blog.post', post_id=post.id) }}" class="flex flex-col md:flex-row">
+                            <div class="md:w-1/3">
+                                <img src="{{ post.image }}" alt="{{ post.title }}" 
+                                     class="w-full h-48 md:h-full object-cover">
+                            </div>
+                            <div class="p-6 md:w-2/3">
+                                <div class="flex items-center mb-3">
+                                    <span class="text-xs font-bold text-white 
+                                        {% if post.category == 'Tutorials' %}bg-primary-600
+                                        {% elif post.category == 'Best Practices' %}bg-secondary-600
+                                        {% elif post.category == 'Deep Learning' %}bg-green-600
+                                        {% else %}bg-indigo-600{% endif %} 
+                                        px-3 py-1 rounded-full">
+                                        {{ post.category }}
+                                    </span>
+                                    <span class="text-sm text-gray-500 ml-auto">
+                                        <i class="far fa-calendar-alt mr-1"></i> {{ post.date.strftime('%B %d, %Y') }}
+                                    </span>
+                                </div>
+                                <h2 class="text-xl font-bold text-gray-900 mb-3 hover:text-primary-600 transition-colors">
+                                    {{ post.title }}
+                                </h2>
+                                <p class="text-gray-600 mb-4">
+                                    {{ post.excerpt }}
+                                </p>
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <img src="https://ui-avatars.com/api/?name={{ post.author }}&background=random" 
+                                             alt="{{ post.author }}" 
+                                             class="h-8 w-8 rounded-full">
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">{{ post.author }}</p>
+                                    </div>
+                                    <div class="ml-auto flex space-x-3 text-gray-400">
+                                        <span class="flex items-center text-xs">
+                                            <i class="far fa-heart mr-1"></i> {{ post.likes }}
+                                        </span>
+                                        <span class="flex items-center text-xs">
+                                            <i class="far fa-comment mr-1"></i> {{ post.comments }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- No Results State -->
+                <div class="bg-white rounded-xl shadow-md p-12 text-center">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 text-gray-400 mb-6">
+                        <i class="fas fa-search text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">No results found</h3>
+                    <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                        We couldn't find any articles matching your search query. Please try different keywords or browse our categories.
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <a href="{{ url_for('blog.index') }}" class="inline-flex items-center px-6 py-3 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Blog
+                        </a>
+                        <a href="#" class="inline-flex items-center px-6 py-3 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-th-large mr-2"></i> Browse Categories
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Search Tips -->
+        {% if results|length == 0 %}
+        <div class="max-w-3xl mx-auto mt-12 bg-blue-50 rounded-xl p-6 border border-blue-100">
+            <h3 class="text-lg font-medium text-blue-800 mb-3">Search Tips</h3>
+            <ul class="text-blue-700 space-y-2 list-disc pl-5">
+                <li>Check your spelling</li>
+                <li>Try more general keywords</li>
+                <li>Try different keywords</li>
+                <li>Try searching by category or tag instead</li>
+            </ul>
+        </div>
+        {% endif %}
+        
+        <!-- Popular Searches -->
+        <div class="max-w-3xl mx-auto mt-12">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Popular Searches</h3>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('blog.search', q='machine learning') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    machine learning
+                </a>
+                <a href="{{ url_for('blog.search', q='python') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    python
+                </a>
+                <a href="{{ url_for('blog.search', q='neural networks') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    neural networks
+                </a>
+                <a href="{{ url_for('blog.search', q='data visualization') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    data visualization
+                </a>
+                <a href="{{ url_for('blog.search', q='deep learning') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    deep learning
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}{{ milestone.title }} - {{ career_path.name|replace('-', ' ')|title }} Roadmap{% endblock %}
+
+{% block head %}
+<style>
+    .skill-badge {
+        transition: all 0.3s ease;
+    }
+    
+    .skill-badge:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .resource-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .resource-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .resource-card.course {
+        border-left-color: #3b82f6;
+    }
+    
+    .resource-card.book {
+        border-left-color: #8b5cf6;
+    }
+    
+    .resource-card.video {
+        border-left-color: #ef4444;
+    }
+    
+    .resource-card.article {
+        border-left-color: #10b981;
+    }
+    
+    .resource-card.tool {
+        border-left-color: #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-8 text-sm" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li>
+                <a href="{{ url_for('index') }}" class="text-gray-500 hover:text-gray-700">Home</a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <a href="{{ url_for('roadmap.index') }}" class="ml-2 text-gray-500 hover:text-gray-700">Roadmaps</a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <a href="{{ url_for('roadmap.show_path', path_name=career_path.name) }}" class="ml-2 text-gray-500 hover:text-gray-700">{{ career_path.name|replace('-', ' ')|title }}</a>
+            </li>
+            <li class="flex items-center">
+                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="ml-2 text-gray-900 font-medium">{{ milestone.title }}</span>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-10" data-aos="fade-up">
+        <div class="flex items-center mb-4">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                <span class="text-blue-600 font-bold text-xl">{{ milestone.order }}</span>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ milestone.title }}</h1>
+        </div>
+        <p class="text-xl text-gray-600 max-w-3xl">{{ milestone.description }}</p>
+        
+        <div class="flex flex-wrap gap-4 mt-6">
+            <div class="flex items-center text-gray-600">
+                <i class="fas fa-clock mr-2 text-blue-500"></i>
+                <span>{{ milestone.duration }}</span>
+            </div>
+            <div class="flex items-center text-gray-600">
+                <i class="fas fa-signal mr-2 text-blue-500"></i>
+                <span>{{ milestone.difficulty }}</span>
+            </div>
+            
+            {% if current_user.is_authenticated %}
+            <div class="ml-auto">
+                <div class="inline-flex rounded-md shadow-sm" role="group">
+                    <button type="button" 
+                            class="progress-btn px-4 py-2 text-sm font-medium rounded-l-lg border {% if status == 'not_started' %}bg-gray-100 text-gray-700{% else %}bg-gray-50 text-gray-500{% endif %} hover:bg-gray-100"
+                            data-status="not_started"
+                            data-milestone-id="{{ milestone.id }}">
+                        Not Started
+                    </button>
+                    <button type="button" 
+                            class="progress-btn px-4 py-2 text-sm font-medium border-t border-b {% if status == 'in_progress' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-50 text-gray-500{% endif %} hover:bg-yellow-100"
+                            data-status="in_progress"
+                            data-milestone-id="{{ milestone.id }}">
+                        In Progress
+                    </button>
+                    <button type="button" 
+                            class="progress-btn px-4 py-2 text-sm font-medium rounded-r-lg border {% if status == 'completed' %}bg-green-100 text-green-700{% else %}bg-gray-50 text-gray-500{% endif %} hover:bg-green-100"
+                            data-status="completed"
+                            data-milestone-id="{{ milestone.id }}">
+                        Completed
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Skills Section -->
+            {% if milestone.skills %}
+            <div class="bg-white rounded-xl shadow-sm p-6" data-aos="fade-up" data-aos-delay="100">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Skills to Master</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for skill in milestone.skills %}
+                    <div class="skill-badge flex items-start p-4 bg-blue-50 rounded-lg">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-check-circle text-blue-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="font-medium text-gray-900">{{ skill.name }}</h3>
+                            {% if skill.description %}
+                            <p class="text-sm text-gray-600 mt-1">{{ skill.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Learning Path -->
+            <div class="bg-white rounded-xl shadow-sm p-6" data-aos="fade-up" data-aos-delay="200">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Learning Path</h2>
+                <div class="space-y-6">
+                    <div class="relative pl-8 pb-6 border-l-2 border-blue-200">
+                        <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-blue-500 transform -translate-x-1/2"></div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Understand the Fundamentals</h3>
+                        <p class="text-gray-600">Start by learning the core concepts and principles. Focus on building a solid foundation before moving to advanced topics.</p>
+                    </div>
+                    
+                    <div class="relative pl-8 pb-6 border-l-2 border-blue-200">
+                        <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-blue-500 transform -translate-x-1/2"></div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Practice with Real Examples</h3>
+                        <p class="text-gray-600">Apply what you've learned through hands-on exercises and small projects. This reinforces your understanding and builds practical skills.</p>
+                    </div>
+                    
+                    <div class="relative pl-8">
+                        <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-blue-500 transform -translate-x-1/2"></div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Build a Portfolio Project</h3>
+                        <p class="text-gray-600">Create a comprehensive project that demonstrates your mastery of this milestone's skills. This will be valuable for your portfolio.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources Sidebar -->
+        <div class="space-y-8">
+            <!-- Resources Section -->
+            {% if milestone.resources %}
+            <div class="bg-white rounded-xl shadow-sm p-6" data-aos="fade-up" data-aos-delay="300">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Learning Resources</h2>
+                <div class="space-y-4">
+                    {% for resource in milestone.resources %}
+                    <a href="{{ resource.url }}" target="_blank" class="resource-card block p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 {% if resource.type|lower == 'course' %}course{% elif resource.type|lower == 'book' %}book{% elif resource.type|lower == 'video' %}video{% elif resource.type|lower == 'article' %}article{% else %}tool{% endif %}">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 mt-1">
+                                {% if resource.type|lower == 'course' %}
+                                    <i class="fas fa-graduation-cap text-blue-500"></i>
+                                {% elif resource.type|lower == 'book' %}
+                                    <i class="fas fa-book text-purple-500"></i>
+                                {% elif resource.type|lower == 'video' %}
+                                    <i class="fas fa-video text-red-500"></i>
+                                {% elif resource.type|lower == 'article' %}
+                                    <i class="fas fa-file-alt text-green-500"></i>
+                                {% else %}
+                                    <i class="fas fa-tools text-yellow-500"></i>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="font-medium text-gray-900">{{ resource.title }}</h3>
+                                <div class="text-sm text-gray-600 mt-1">
+                                    {{ resource.provider }}
+                                    {% if resource.is_free %}
+                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Free</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Next Steps -->
+            <div class="bg-white rounded-xl shadow-sm p-6" data-aos="fade-up" data-aos-delay="400">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Next Steps</h2>
+                
+                {% if next_milestone %}
+                <div class="mb-6">
+                    <p class="text-gray-600 mb-4">Continue your learning journey with the next milestone:</p>
+                    <a href="{{ url_for('roadmap.show_milestone', path_name=career_path.name, milestone_id=next_milestone.id) }}" 
+                       class="block p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-medium">{{ next_milestone.order }}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-900">{{ next_milestone.title }}</h3>
+                                <p class="text-sm text-gray-600 mt-1">{{ next_milestone.duration }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endif %}
+                
+                <a href="{{ url_for('roadmap.show_path', path_name=career_path.name) }}" 
+                   class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    Back to Roadmap
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress buttons
+    const progressButtons = document.querySelectorAll('.progress-btn');
+    
+    progressButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const milestoneId = this.getAttribute('data-milestone-id');
+            const status = this.getAttribute('data-status');
+            
+            // Update UI immediately for better UX
+            const buttonGroup = this.parentElement;
+            buttonGroup.querySelectorAll('.progress-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-100', 'bg-yellow-100', 'bg-green-100', 'text-gray-700', 'text-yellow-700', 'text-green-700');
+                btn.classList.add('bg-gray-50', 'text-gray-500');
+            });
+            
+            if (status === 'not_started') {
+                this.classList.remove('bg-gray-50', 'text-gray-500');
+                this.classList.add('bg-gray-100', 'text-gray-700');
+            } else if (status === 'in_progress') {
+                this.classList.remove('bg-gray-50', 'text-gray-500');
+                this.classList.add('bg-yellow-100', 'text-yellow-700');
+            } else if (status === 'completed') {
+                this.classList.remove('bg-gray-50', 'text-gray-500');
+                this.classList.add('bg-green-100', 'text-green-700');
+            }
+            
+            // Send update to server
+            fetch('{{ url_for("roadmap.update_progress") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    'milestone_id': milestoneId,
+                    'status': status
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Progress updated successfully');
+                } else {
+                    console.error('Error updating progress:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

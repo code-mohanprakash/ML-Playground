@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Model Recommendation{% endblock %}
+{% block breadcrumb_name %}Model Recommendation{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+            <h2 class="text-2xl font-bold text-white">Model Recommendation</h2>
+            <p class="text-blue-100">Find the best model for your dataset</p>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <!-- Recommendation Form -->
+                <div class="lg:col-span-2">
+                    <form action="{{ url_for('recommendation') }}" method="POST" class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-bold mb-4 text-gray-800">Dataset Characteristics</h3>
+                            <p class="text-gray-600 mb-6">Tell us about your dataset to get personalized model recommendations.</p>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Task Type</label>
+                                    <select name="task" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="" disabled {% if not dataset_properties.task %}selected{% endif %}>Select a task...</option>
+                                        <option value="regression" {% if dataset_properties.task == 'regression' %}selected{% endif %}>Regression</option>
+                                        <option value="classification" {% if dataset_properties.task == 'classification' %}selected{% endif %}>Classification</option>
+                                        <option value="clustering" {% if dataset_properties.task == 'clustering' %}selected{% endif %}>Clustering</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Dataset Size</label>
+                                    <select name="size" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="" disabled {% if not dataset_properties.size %}selected{% endif %}>Select size...</option>
+                                        <option value="small" {% if dataset_properties.size == 'small' %}selected{% endif %}>Small (< 10,000 samples)</option>
+                                        <option value="medium" {% if dataset_properties.size == 'medium' %}selected{% endif %}>Medium (10,000 - 100,000 samples)</option>
+                                        <option value="large" {% if dataset_properties.size == 'large' %}selected{% endif %}>Large (> 100,000 samples)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Data Complexity</label>
+                                    <select name="complexity" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="" disabled {% if not dataset_properties.complexity %}selected{% endif %}>Select complexity...</option>
+                                        <option value="simple" {% if dataset_properties.complexity == 'simple' %}selected{% endif %}>Simple (Linear patterns)</option>
+                                        <option value="moderate" {% if dataset_properties.complexity == 'moderate' %}selected{% endif %}>Moderate (Some non-linearity)</option>
+                                        <option value="complex" {% if dataset_properties.complexity == 'complex' %}selected{% endif %}>Complex (Highly non-linear)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Importance of Speed</label>
+                                    <select name="speed" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                                        <option value="" disabled {% if not dataset_properties.speed %}selected{% endif %}>Select importance...</option>
+                                        <option value="fast" {% if dataset_properties.speed == 'fast' %}selected{% endif %}>Fast training/inference is critical</option>
+                                        <option value="balanced" {% if dataset_properties.speed == 'balanced' %}selected{% endif %}>Balance between speed and accuracy</option>
+                                        <option value="accuracy" {% if dataset_properties.speed == 'accuracy' %}selected{% endif %}>Accuracy is more important than speed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors">
+                                <i class="fas fa-search mr-2"></i> Get Recommendations
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Recommendation Results -->
+                <div class="lg:col-span-3">
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 p-4 border-b">
+                            <h3 class="font-bold text-lg text-gray-800">Recommended Models</h3>
+                        </div>
+                        
+                        <div class="p-4">
+                            {% if recommended_models %}
+                                <div class="space-y-4">
+                                    {% for model in recommended_models %}
+                                    <div class="bg-blue-50 p-4 rounded-lg">
+                                        <div class="flex justify-between items-center">
+                                            <h4 class="font-bold text-blue-600">{{ model }}</h4>
+                                            <a href="{{ url_for('select_model') }}?model={{ model }}" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                                                <i class="fas fa-play mr-1"></i> Use
+                                            </a>
+                                        </div>
+                                        <p class="text-gray-600 text-sm mt-2">
+                                            {% if model.startswith('Linear') %}
+                                                Simple, fast, and interpretable. Good for datasets with linear relationships.
+                                            {% elif model.startswith('Ridge') %}
+                                                Linear model with regularization to prevent overfitting.
+                                            {% elif model.startswith('Random Forest') %}
+                                                Ensemble method that works well on a variety of datasets and isn't prone to overfitting.
+                                            {% elif model.startswith('Gradient Boosting') %}
+                                                Powerful ensemble method that often yields excellent results but may be slower to train.
+                                            {% elif model.startswith('XGBoost') %}
+                                                State-of-the-art implementation of gradient boosting that excels in competitions.
+                                            {% elif model.startswith('Logistic') %}
+                                                Simple and interpretable classifier, works well for linearly separable data.
+                                            {% elif model.startswith('SVC') %}
+                                                Powerful classifier that can handle non-linear boundaries with kernels.
+                                            {% elif model.startswith('Naive') %}
+                                                Fast, simple classifier that works well with high-dimensional data.
+                                            {% elif model.startswith('K-Means') %}
+                                                Simple and fast clustering algorithm that works well for spherical clusters.
+                                            {% elif model.startswith('DBSCAN') %}
+                                                Density-based clustering that can find arbitrary-shaped clusters.
+                                            {% elif model.startswith('Agglomerative') %}
+                                                Hierarchical clustering that builds a tree of clusters.
+                                            {% elif model.startswith('Gaussian') %}
+                                                Probabilistic clustering that models clusters with Gaussian distributions.
+                                            {% else %}
+                                                A good match for your dataset characteristics.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-10">
+                                    <i class="fas fa-robot text-gray-300 text-5xl mb-4"></i>
+                                    <p class="text-gray-500">Fill out the form to get model recommendations based on your dataset characteristics.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

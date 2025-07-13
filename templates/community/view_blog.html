@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}{{ blog.title }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<meta property="og:title" content="{{ blog.title }}">
+<meta property="og:description" content="{{ blog.preview_content }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ request.url }}">
+{% if blog.image_url %}
+<meta property="og:image" content="{{ blog.image_url }}">
+{% endif %}
+
+<style>
+.blog-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #2c3e50;
+}
+
+.blog-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+.blog-content blockquote {
+    border-left: 4px solid #3498db;
+    margin: 1.5rem 0;
+    padding: 0.5rem 0 0.5rem 1rem;
+    background-color: #f8f9fa;
+}
+
+.comment {
+    border-left: 3px solid #e9ecef;
+    margin-bottom: 1rem;
+    padding-left: 1rem;
+}
+
+.social-share-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    margin: 0.25rem;
+    color: white;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.social-share-button:hover {
+    opacity: 0.9;
+    color: white;
+}
+
+.twitter-share {
+    background-color: #1da1f2;
+}
+
+.linkedin-share {
+    background-color: #0077b5;
+}
+
+.facebook-share {
+    background-color: #3b5998;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <!-- Blog Post -->
+            <article class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <!-- Author Info -->
+                    <div class="d-flex align-items-center mb-4">
+                        <img src="{{ blog.author.profile_picture or url_for('static', filename='img/default-avatar.png') }}" 
+                             class="rounded-circle me-3" style="width: 48px; height: 48px;" alt="Author Picture">
+                        <div>
+                            <h6 class="mb-0">{{ blog.author.username }}</h6>
+                            <div class="text-muted">
+                                Published on {{ blog.created_at.strftime('%B %d, %Y') }}
+                                {% if blog.updated_at != blog.created_at %}
+                                · Updated on {{ blog.updated_at.strftime('%B %d, %Y') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if current_user.is_authenticated and current_user.id != blog.author.id %}
+                        <button class="btn btn-outline-primary ms-auto follow-btn" 
+                                data-user-id="{{ blog.author.id }}"
+                                data-following="{{ 'true' if current_user.is_following(blog.author) else 'false' }}">
+                            {% if current_user.is_following(blog.author) %}
+                            Following
+                            {% else %}
+                            Follow
+                            {% endif %}
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Blog Content -->
+                    <h1 class="mb-4">{{ blog.title }}</h1>
+                    
+                    {% if blog.hashtags %}
+                    <div class="mb-4">
+                        {% for hashtag in blog.hashtags %}
+                        <a href="{{ url_for('community.hashtag_view', name=hashtag.name) }}" 
+                           class="text-decoration-none me-2 hashtag-preview">
+                            #{{ hashtag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="blog-content mb-4">
+                        {{ blog.content|safe }}
+                    </div>
+
+                    <!-- Engagement Stats -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-outline-primary me-2 like-btn" 
+                                    data-blog-id="{{ blog.id }}"
+                                    data-liked="{{ 'true' if current_user.is_authenticated and blog in current_user.liked_blogs else 'false' }}">
+                                <i class="fas fa-heart"></i>
+                                <span class="like-count">{{ blog.likes|length }}</span>
+                            </button>
+                            <button class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-comment"></i>
+                                {{ blog.comments|length }}
+                            </button>
+                            <span class="text-muted">
+                                <i class="fas fa-eye"></i> {{ blog.views }} views
+                                · {{ blog.reading_time }} min read
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Social Share Buttons -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">Share this post</h5>
+                        <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ blog.title|urlencode }}"
+                           target="_blank" class="social-share-button twitter-share">
+                            <i class="fab fa-twitter me-2"></i> Twitter
+                        </a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}"
+                           target="_blank" class="social-share-button linkedin-share">
+                            <i class="fab fa-linkedin me-2"></i> LinkedIn
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}"
+                           target="_blank" class="social-share-button facebook-share">
+                            <i class="fab fa-facebook me-2"></i> Facebook
+                        </a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Comments Section -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-4">Comments</h4>
+                    
+                    {% if current_user.is_authenticated %}
+                    <form class="mb-4" id="comment-form">
+                        <div class="mb-3">
+                            <textarea class="form-control" id="comment-content" rows="3" 
+                                      placeholder="Write a comment..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info">
+                        Please <a href="{{ url_for('auth.login') }}">login</a> to comment.
+                    </div>
+                    {% endif %}
+
+                    <div id="comments-container">
+                        {% for comment in blog.comments|sort(attribute='created_at', reverse=true) %}
+                        <div class="comment">
+                            <div class="d-flex align-items-center mb-2">
+                                <img src="{{ comment.author.profile_picture or url_for('static', filename='img/default-avatar.png') }}" 
+                                     class="rounded-circle me-2" style="width: 32px; height: 32px;" alt="Commenter Picture">
+                                <div>
+                                    <h6 class="mb-0">{{ comment.author.username }}</h6>
+                                    <small class="text-muted">{{ comment.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                            </div>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Like functionality
+    const likeBtn = document.querySelector('.like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', async function() {
+            if (!{{ 'true' if current_user.is_authenticated else 'false' }}) {
+                window.location.href = "{{ url_for('auth.login') }}";
+                return;
+            }
+            
+            const blogId = this.dataset.blogId;
+            const response = await fetch(`/api/like/${blogId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const data = await response.json();
+            this.querySelector('.like-count').textContent = data.likes;
+            
+            if (data.action === 'liked') {
+                this.classList.add('active');
+            } else {
+                this.classList.remove('active');
+            }
+        });
+    }
+
+    // Follow functionality
+    const followBtn = document.querySelector('.follow-btn');
+    if (followBtn) {
+        followBtn.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const response = await fetch(`/api/follow/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.action === 'followed') {
+                this.textContent = 'Following';
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+            } else {
+                this.textContent = 'Follow';
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-outline-primary');
+            }
+        });
+    }
+
+    // Comment functionality
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('comment-content').value;
+            if (!content.trim()) return;
+            
+            const response = await fetch(`/api/comment/{{ blog.id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content })
+            });
+            
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

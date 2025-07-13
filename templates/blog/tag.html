@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}#{{ tag }} - ML Playground Blog{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-gray-50 to-white min-h-screen">
+    <!-- Hero Section with Tag-specific Background -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute inset-0" style="background-image: url('https://source.unsplash.com/random/1920x1080/?{{ tag }}'); background-size: cover; mix-blend-mode: overlay;"></div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white bg-opacity-20 mb-6">
+                    <i class="fas fa-hashtag text-3xl"></i>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+                    #{{ tag }}
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-100 max-w-2xl mx-auto">
+                    Explore our collection of articles tagged with #{{ tag }}
+                </p>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="w-full h-auto">
+                <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,149.3C960,160,1056,160,1152,138.7C1248,117,1344,75,1392,53.3L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Posts Grid with Enhanced Cards -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for post in posts %}
+            <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 flex flex-col h-full">
+                <a href="{{ url_for('blog.post', post_id=post.id) }}" class="block flex-grow">
+                    <div class="relative">
+                        <img src="{{ post.image }}" alt="{{ post.title }}" 
+                             class="w-full h-56 object-cover">
+                        <div class="absolute top-4 right-4">
+                            <span class="text-xs font-bold text-white 
+                                {% if post.category == 'Tutorials' %}bg-primary-600
+                                {% elif post.category == 'Best Practices' %}bg-secondary-600
+                                {% elif post.category == 'Deep Learning' %}bg-green-600
+                                {% else %}bg-indigo-600{% endif %} 
+                                px-3 py-1 rounded-full">
+                                {{ post.category }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow">
+                        <div class="flex items-center mb-4">
+                            <span class="text-sm text-gray-500">
+                                <i class="far fa-calendar-alt mr-1"></i> {{ post.date.strftime('%B %d, %Y') }}
+                            </span>
+                            <span class="text-sm text-gray-500 ml-4">
+                                <i class="far fa-clock mr-1"></i> {{ post.read_time }} min read
+                            </span>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-900 mb-3 hover:text-primary-600 transition-colors line-clamp-2">
+                            {{ post.title }}
+                        </h2>
+                        <p class="text-gray-600 mb-4 line-clamp-3">
+                            {{ post.excerpt }}
+                        </p>
+                    </div>
+                </a>
+                <div class="px-6 pb-6 pt-2 border-t border-gray-100 mt-auto">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <img src="https://ui-avatars.com/api/?name={{ post.author }}&background=random" 
+                                 alt="{{ post.author }}" 
+                                 class="h-10 w-10 rounded-full">
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-900">{{ post.author }}</p>
+                            <p class="text-xs text-gray-500">Data Science Expert</p>
+                        </div>
+                        <div class="ml-auto flex space-x-3 text-gray-400">
+                            <span class="flex items-center text-xs">
+                                <i class="far fa-heart mr-1"></i> {{ post.likes }}
+                            </span>
+                            <span class="flex items-center text-xs">
+                                <i class="far fa-comment mr-1"></i> {{ post.comments }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- No Results State (if needed) -->
+        {% if posts|length == 0 %}
+        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 text-gray-400 mb-6">
+                <i class="fas fa-search text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">No articles found</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                We couldn't find any articles with the tag #{{ tag }}. Please check back later or explore other tags.
+            </p>
+            <a href="{{ url_for('blog.index') }}" class="inline-flex items-center px-6 py-3 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Blog
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Related Tags Section -->
+        <div class="mt-16 bg-white rounded-xl shadow-md p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Tags</h2>
+            <div class="flex flex-wrap gap-3">
+                {% for related_tag in ['MachineLearning', 'AI', 'DataScience', 'DeepLearning', 'NeuralNetworks', 'Python', 'TensorFlow', 'PyTorch', 'ComputerVision', 'NLP'] %}
+                    {% if related_tag != tag %}
+                    <a href="{{ url_for('blog.tag', tag=related_tag) }}" 
+                       class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 transition-colors">
+                        #{{ related_tag }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

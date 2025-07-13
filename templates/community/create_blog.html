@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Create Blog Post{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Include TinyMCE -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+  tinymce.init({
+    selector: '#content',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    height: 500,
+    menubar: false,
+    statusbar: false,
+    content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 16px; line-height: 1.6; }',
+  });
+</script>
+<style>
+.hashtag-preview {
+    display: inline-block;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 2px;
+    font-size: 14px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Create a Blog Post</h2>
+                    
+                    <form method="POST" action="{{ url_for('community.create_blog') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required
+                                   placeholder="Enter your blog title">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="Data Science">Data Science</option>
+                                <option value="Programming">Programming</option>
+                                <option value="AI">Artificial Intelligence</option>
+                                <option value="Deep Learning">Deep Learning</option>
+                                <option value="Career">Career</option>
+                                <option value="Tutorial">Tutorial</option>
+                                <option value="News">News</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="12" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="hashtags" class="form-label">Hashtags</label>
+                            <input type="text" class="form-control" id="hashtags" name="hashtags"
+                                   placeholder="Add hashtags (comma separated)">
+                            <div class="form-text">Example: #machinelearning, #datascience, #programming</div>
+                            <div id="hashtag-preview" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Publish Blog Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hashtagInput = document.getElementById('hashtags');
+    const hashtagPreview = document.getElementById('hashtag-preview');
+    
+    function updateHashtagPreview() {
+        const hashtags = hashtagInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        hashtagPreview.innerHTML = hashtags.map(tag => {
+            const formattedTag = tag.startsWith('#') ? tag : '#' + tag;
+            return `<span class="hashtag-preview">${formattedTag}</span>`;
+        }).join(' ');
+    }
+    
+    hashtagInput.addEventListener('input', updateHashtagPreview);
+    hashtagInput.addEventListener('blur', function() {
+        const hashtags = hashtagInput.value.split(',').map(tag => {
+            tag = tag.trim();
+            return tag.startsWith('#') ? tag : '#' + tag;
+        });
+        hashtagInput.value = hashtags.join(', ');
+        updateHashtagPreview();
+    });
+});
+</script>
+{% endblock %} 

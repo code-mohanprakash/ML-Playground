@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Resources{% endblock %}
+{% block breadcrumb_name %}Resources{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-gray-600 to-gray-800 p-6">
+            <h2 class="text-2xl font-bold text-white">Machine Learning Resources</h2>
+            <p class="text-gray-200">Curated resources to help you learn more about machine learning</p>
+        </div>
+        
+        <div class="p-6">
+            <!-- Courses and Tutorials -->
+            <h3 class="text-xl font-bold mb-6">Courses and Tutorials</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% set courses = [
+                    {
+                        'title': 'Machine Learning Crash Course',
+                        'provider': 'Google',
+                        'description': 'A self-study guide for aspiring machine learning practitioners',
+                        'image': 'ml_crash_course.png',
+                        'free': True
+                    },
+                    {
+                        'title': 'Machine Learning A-Z',
+                        'provider': 'Udemy',
+                        'description': 'Hands-On Python & R In Data Science',
+                        'image': 'ml_a_to_z.png',
+                        'free': False
+                    },
+                    {
+                        'title': 'Machine Learning with Krish Naik',
+                        'provider': 'Udemy',
+                        'description': 'Complete Machine Learning & Data Science with Python',
+                        'image': 'krish_naik_ml.png',
+                        'free': False
+                    },
+                    {
+                        'title': 'Introduction to Machine Learning',
+                        'provider': 'Coursera',
+                        'description': 'Foundational course for beginners',
+                        'image': 'intro_ml.png',
+                        'free': True
+                    },
+                    {
+                        'title': 'Machine Learning Guide Podcast',
+                        'provider': 'OCDevel',
+                        'description': 'In-depth discussions on machine learning concepts',
+                        'image': 'ml_podcast.png',
+                        'free': True
+                    }
+                ] %}
+
+                {% for course in courses %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl">
+                    <div class="relative">
+                        <img 
+                            src="{{ url_for('static', filename='images/resources/' + course.image) }}" 
+                            alt="{{ course.title }}" 
+                            class="w-full h-48 object-cover"
+                            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/placeholder.png') }}';"
+                        />
+                        {% if course.free %}
+                        <span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">Free</span>
+                        {% endif %}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold mb-2">{{ course.title }}</h3>
+                        <p class="text-gray-600 text-sm mb-2">{{ course.provider }}</p>
+                        <p class="text-gray-500 text-sm">{{ course.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- ML Glossary -->
+            <h3 class="text-xl font-bold mb-6">Machine Learning Glossary</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {% for term, definition in glossary.items() %}
+                <div class="border rounded-lg p-4 shadow-sm">
+                    <h4 class="font-bold text-gray-600">{{ term }}</h4>
+                    <p class="text-gray-600">{{ definition }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Book Recommendations -->
+            <h3 class="text-xl font-bold mb-6">Recommended Books</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for book in books %}
+                <a href="{{ book.url }}" target="_blank" class="flex border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                    <div class="w-1/3">
+                        <img src="{{ book.image }}" alt="{{ book.title }}" class="object-cover w-full h-full">
+                    </div>
+                    <div class="w-2/3 p-4">
+                        <h4 class="font-bold text-lg">{{ book.title }}</h4>
+                        <p class="text-gray-500 text-sm mb-2">{{ book.author }}</p>
+                        <p class="text-gray-600 text-sm">{{ book.description }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

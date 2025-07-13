@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Machine Learning Playground{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4">
+    <!-- Hero Section with Animation -->
+    <div class="text-center mb-16 animate-slide-up">
+        <div class="inline-block p-1.5 px-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full text-gray-700 text-sm font-medium mb-4">
+            <span class="flex items-center"><i class="fas fa-rocket mr-2"></i> No coding required</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">
+            <span class="bg-gradient-to-r from-gray-700 to-gray-600 bg-clip-text text-transparent">Machine Learning</span>
+            <br>
+            <span class="text-gray-800">Playground</span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            Explore, train, and compare machine learning models with ease. 
+            Just upload your data and start discovering insights!
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-3 mb-12">
+            <a href="{{ url_for('upload') }}" class="btn btn-primary px-8 py-3 rounded-lg text-center flex items-center justify-center gap-2 transform hover:-translate-y-1 transition-all duration-300 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white">
+                <i class="fas fa-upload"></i>
+                <span>Upload Dataset</span>
+            </a>
+            <a href="{{ url_for('datasets') }}" class="btn btn-outline bg-white text-gray-800 hover:bg-gray-100 border border-gray-300 px-8 py-3 rounded-lg text-center flex items-center justify-center gap-2 transition-all duration-300 transform hover:-translate-y-1">
+                <i class="fas fa-database"></i>
+                <span>Sample Datasets</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Section with Animation -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div class="card p-6 text-center bg-gradient-to-br from-white to-gray-50 animate-fade-in" style="animation-delay: 0.1s">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-xl flex items-center justify-center">
+                <i class="fas fa-database text-2xl"></i>
+            </div>
+            <div class="text-4xl font-bold text-gray-700 mb-2">{{ dataset_count }}</div>
+            <div class="text-gray-600">Available Datasets</div>
+        </div>
+        <div class="card p-6 text-center bg-gradient-to-br from-white to-gray-50 animate-fade-in" style="animation-delay: 0.2s">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-xl flex items-center justify-center">
+                <i class="fas fa-brain text-2xl"></i>
+            </div>
+            <div class="text-4xl font-bold text-gray-700 mb-2">{{ model_count }}</div>
+            <div class="text-gray-600">Machine Learning Models</div>
+        </div>
+        <div class="card p-6 text-center bg-gradient-to-br from-white to-gray-50 animate-fade-in" style="animation-delay: 0.3s">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-xl flex items-center justify-center">
+                <i class="fas fa-graduation-cap text-2xl"></i>
+            </div>
+            <div class="text-4xl font-bold text-gray-700 mb-2">6</div>
+            <div class="text-gray-600">Learning Categories</div>
+        </div>
+    </div>
+
+    <!-- Categories Section with Roadmap-like Design -->
+    <div class="mb-16 animate-fade-in" style="animation-delay: 0.35s">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Dataset Categories</h2>
+        
+        <div class="relative">
+            <!-- Connecting Line -->
+            <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-gray-400 via-gray-500 to-gray-600 hidden md:block"></div>
+            
+            <!-- Categories as Steps -->
+            <div class="space-y-12 relative">
+                <!-- Regression -->
+                <div class="md:ml-8 md:mr-auto md:w-5/12 relative group" data-aos="fade-right">
+                    <div class="hidden md:block absolute top-6 right-0 w-8 h-0.5 bg-gradient-to-r from-gray-400 to-gray-500 transform translate-x-full"></div>
+                    <div class="hidden md:block absolute top-5 right-0 w-4 h-4 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 border-4 border-gray-100 transform translate-x-full -ml-2"></div>
+                    <a href="{{ url_for('datasets') }}?category=regression" class="block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">Regression</h3>
+                                <p class="text-gray-600">Predict continuous values like prices, temperatures, or scores.</p>
+                                <div class="mt-3 text-gray-700 font-medium flex items-center">
+                                    <span>Explore datasets</span>
+                                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Classification -->
+                <div class="md:mr-8 md:ml-auto md:w-5/12 relative group" data-aos="fade-left">
+                    <div class="hidden md:block absolute top-6 left-0 w-8 h-0.5 bg-gradient-to-r from-gray-500 to-gray-400 transform -translate-x-full"></div>
+                    <div class="hidden md:block absolute top-5 left-0 w-4 h-4 rounded-full bg-gradient-to-r from-gray-500 to-gray-400 border-4 border-gray-100 transform -translate-x-full -ml-2"></div>
+                    <a href="{{ url_for('datasets') }}?category=classification" class="block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-tags text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">Classification</h3>
+                                <p class="text-gray-600">Categorize data into classes like spam detection or disease diagnosis.</p>
+                                <div class="mt-3 text-gray-700 font-medium flex items-center">
+                                    <span>Explore datasets</span>
+                                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Clustering -->
+                <div class="md:ml-8 md:mr-auto md:w-5/12 relative group" data-aos="fade-right">
+                    <div class="hidden md:block absolute top-6 right-0 w-8 h-0.5 bg-gradient-to-r from-gray-400 to-gray-500 transform translate-x-full"></div>
+                    <div class="hidden md:block absolute top-5 right-0 w-4 h-4 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 border-4 border-gray-100 transform translate-x-full -ml-2"></div>
+                    <a href="{{ url_for('datasets') }}?category=clustering" class="block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-object-group text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">Clustering</h3>
+                                <p class="text-gray-600">Group similar data points for customer segmentation or pattern discovery.</p>
+                                <div class="mt-3 text-gray-700 font-medium flex items-center">
+                                    <span>Explore datasets</span>
+                                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Text -->
+                <div class="md:mr-8 md:ml-auto md:w-5/12 relative group" data-aos="fade-left">
+                    <div class="hidden md:block absolute top-6 left-0 w-8 h-0.5 bg-gradient-to-r from-gray-500 to-gray-400 transform -translate-x-full"></div>
+                    <div class="hidden md:block absolute top-5 left-0 w-4 h-4 rounded-full bg-gradient-to-r from-gray-500 to-gray-400 border-4 border-gray-100 transform -translate-x-full -ml-2"></div>
+                    <a href="{{ url_for('learn') }}#text-processing" class="block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-file-alt text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">Text</h3>
+                                <p class="text-gray-600">Process natural language for sentiment analysis or text classification.</p>
+                                <div class="mt-3 text-gray-700 font-medium flex items-center">
+                                    <span>Learn more</span>
+                                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Image -->
+                <div class="md:ml-8 md:mr-auto md:w-5/12 relative group" data-aos="fade-right">
+                    <div class="hidden md:block absolute top-6 right-0 w-8 h-0.5 bg-gradient-to-r from-gray-400 to-gray-500 transform translate-x-full"></div>
+                    <div class="hidden md:block absolute top-5 right-0 w-4 h-4 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 border-4 border-gray-100 transform translate-x-full -ml-2"></div>
+                    <a href="{{ url_for('learn') }}#image-processing" class="block p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-image text-2xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">Image</h3>
+                                <p class="text-gray-600">Analyze visual data for object detection or image classification.</p>
+                                <div class="mt-3 text-gray-700 font-medium flex items-center">
+                                    <span>Learn more</span>
+                                    <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it Works Section -->
+    <div class="mb-16 animate-fade-in" style="animation-delay: 0.4s">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">How It Works</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="relative">
+                    <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-upload text-xl"></i>
+                    </div>
+                    <div class="hidden md:block absolute top-8 left-full w-full max-w-[100px] h-0.5 bg-gradient-to-r from-gray-200 to-gray-300">
+                        <div class="absolute right-0 w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 -mt-1"></div>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold mb-2">1. Upload Data</h3>
+                <p class="text-gray-600">Upload your dataset or choose from our sample datasets</p>
+            </div>
+            <div class="text-center">
+                <div class="relative">
+                    <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-cog text-xl"></i>
+                    </div>
+                    <div class="hidden md:block absolute top-8 left-full w-full max-w-[100px] h-0.5 bg-gradient-to-r from-gray-200 to-gray-300">
+                        <div class="absolute right-0 w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 -mt-1"></div>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold mb-2">2. Configure Model</h3>
+                <p class="text-gray-600">Select a model and configure parameters</p>
+            </div>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-line text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">3. Analyze Results</h3>
+                <p class="text-gray-600">Visualize performance and get insights</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Datasets with Improved Cards -->
+    <div class="mb-16 animate-fade-in" style="animation-delay: 0.5s">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800">Featured Datasets</h2>
+            <a href="{{ url_for('datasets') }}" class="text-gray-700 hover:text-gray-900 font-medium flex items-center">
+                View all <i class="fas fa-chevron-right ml-1 text-xs"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for dataset_id, dataset in featured_datasets %}
+            <div class="card overflow-hidden group hover:shadow-md">
+                <div class="h-2 bg-gradient-to-r from-gray-500 to-gray-600"></div>
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 rounded-lg flex items-center justify-center mr-3">
+                            {% if dataset.category == 'regression' %}
+                                <i class="fas fa-chart-line"></i>
+                            {% elif dataset.category == 'classification' %}
+                                <i class="fas fa-tags"></i>
+                            {% elif dataset.category == 'clustering' %}
+                                <i class="fas fa-object-group"></i>
+                            {% endif %}
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">{{ dataset['name'] }}</h3>
+                    </div>
+                    <p class="text-gray-600 mb-4">{{ dataset['description'] }}</p>
+                    <div class="flex justify-between text-sm text-gray-500 mb-4">
+                        <span class="flex items-center"><i class="fas fa-table mr-1 opacity-70"></i> {{ dataset['samples'] }} samples</span>
+                        <span class="flex items-center"><i class="fas fa-columns mr-1 opacity-70"></i> {{ dataset['features'] }} features</span>
+                    </div>
+                    <a href="{{ url_for('preview_dataset', dataset_name=dataset_id) }}" 
+                       class="block text-center px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:text-gray-900 transition-colors group-hover:bg-gradient-to-r group-hover:from-gray-100 group-hover:to-gray-200 group-hover:text-gray-900">
+                        <i class="fas fa-eye mr-1"></i> Preview Dataset
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Featured Models with Improved Cards -->
+    <div class="mb-16 animate-fade-in" style="animation-delay: 0.6s">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800">Featured Models</h2>
+            <a href="{{ url_for('learn') }}" class="text-gray-700 hover:text-gray-900 font-medium flex items-center">
+                View all <i class="fas fa-chevron-right ml-1 text-xs"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for model in featured_models %}
+            <div class="card overflow-hidden group hover:shadow-md">
+                <div class="h-2 bg-gradient-to-r from-gray-500 to-gray-600"></div>
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700">
+                            {% if model.type == 'regression' %}
+                                <i class="fas fa-chart-line"></i>
+                            {% elif model.type == 'classification' %}
+                                <i class="fas fa-tags"></i>
+                            {% elif model.type == 'clustering' %}
+                                <i class="fas fa-object-group"></i>
+                            {% endif %}
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800">{{ model.name }}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">{{ model.description }}</p>
+                    <div class="text-sm inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 mb-4">
+                        <span class="capitalize">{{ model.type }}</span>
+                    </div>
+                    <a href="{{ url_for('learn') }}?model={{ model.name }}" 
+                       class="block text-center px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:text-gray-900 transition-colors group-hover:bg-gradient-to-r group-hover:from-gray-100 group-hover:to-gray-200 group-hover:text-gray-900">
+                        <i class="fas fa-graduation-cap mr-1"></i> Learn More
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add scroll reveal animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const animateOnScroll = function() {
+            const elements = document.querySelectorAll('.animate-fade-in');
+            elements.forEach(element => {
+                const position = element.getBoundingClientRect();
+                if(position.top < window.innerHeight - 100) {
+                    element.style.opacity = '1';
+                }
+            });
+        };
+        
+        // Set initial opacity to 0
+        document.querySelectorAll('.animate-fade-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transition = 'opacity 0.5s ease-out';
+        });
+        
+        // Run on page load
+        animateOnScroll();
+        
+        // Run on scroll
+        window.addEventListener('scroll', animateOnScroll);
+    });
+</script>
+{% endblock %}
