@@ -32,7 +32,6 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsRegressor
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 
 # Classification models (13)
 from sklearn.linear_model import LogisticRegression
@@ -46,6 +45,9 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticD
 # Clustering models (7)
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN, MeanShift, SpectralClustering, Birch
 from sklearn.mixture import GaussianMixture
+
+# For generating sample datasets
+from sklearn.datasets import make_blobs, make_moons, make_circles
 
 # Metrics
 from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, confusion_matrix, silhouette_score, mean_absolute_error, precision_score, recall_score, f1_score, calinski_harabasz_score
@@ -580,23 +582,23 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_SECURE'] = False  # Changed to False for local development without HTTPS
 app.config['REMEMBER_COOKIE_SECURE'] = False  # Changed to False for local development without HTTPS
 app.config['CSRF_ENABLED'] = True
-app.config['SESSION_TYPE'] = 'filesystem'  # Store sessions in filesystem for persistence
+app.config['SESSION_TYPE'] = 'filesystem'  # Store sessions in filesystem for persistence (only used locally)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)  # Session lasts for 24 hours
 
-# Initialize Flask-Session if it's being used
-try:
-    from flask_session import Session
-    Session(app)
-    print("Flask-Session initialized")
-except ImportError:
-    print("Flask-Session not available, using default session")
+# Initialize Flask-Session if it's being used (only for local development)
+if not os.environ.get('VERCEL'):
+    try:
+        from flask_session import Session
+        Session(app)
+        print("Flask-Session initialized")
+    except ImportError:
+        print("Flask-Session not available, using default session")
+else:
+    print("Using default Flask session for Vercel deployment")
 
 # File Upload Configuration
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-
-# Ensure uploads directory exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Initialize Flask-SeaSurf for CSRF protection
 csrf = SeaSurf(app)
@@ -608,9 +610,14 @@ talisman = Talisman(app, content_security_policy=None)
 # Initialize extensions
 db.init_app(app)
 
-# Create database tables
-with app.app_context():
-    db.create_all()
+# Create database tables and directories only if not on Vercel
+if not os.environ.get('VERCEL'):
+    # Ensure uploads directory exists
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
 
 @app.route('/')
 def index():
@@ -649,9 +656,6 @@ def index():
             }
         ]
         
-        # Ensure uploads directory exists
-        os.makedirs('uploads', exist_ok=True)
-        
         return render_template('index.html', 
                             dataset_count=dataset_count, 
                             model_count=model_count,
@@ -685,14 +689,27 @@ def upload():
             return redirect(request.url)
         
         if file:
-            # Save the uploaded file to a unique location
-            unique_filename = str(uuid.uuid4()) + '_' + file.filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(file_path)
+            # Handle file upload for Vercel (read-only filesystem)
+            if os.environ.get('VERCEL'):
+                # On Vercel, we can't save files, so we'll store the file content in session
+                file_content = file.read()
+                file_data = {
+                    'filename': file.filename,
+                    'content': base64.b64encode(file_content).decode('utf-8'),
+                    'content_type': file.content_type
+                }
+                session['file_data'] = file_data
+                flash('File successfully uploaded! (Vercel mode)', 'success')
+            else:
+                # Save the uploaded file to a unique location
+                unique_filename = str(uuid.uuid4()) + '_' + file.filename
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(file_path)
+                
+                # Store the filepath in session
+                session['file_path'] = file_path  # Using consistent naming: file_path
+                flash('File successfully uploaded!', 'success')
             
-            # Store the filepath in session
-            session['file_path'] = file_path  # Using consistent naming: file_path
-            flash('File successfully uploaded!', 'success')
             return redirect(url_for('select_model'))
     
     # Sample datasets to display
@@ -726,14 +743,26 @@ def upload_file():
             return jsonify({'error': 'No selected file'}), 400
         
         if file:
-            # Save the uploaded file to a unique location
-            unique_filename = str(uuid.uuid4()) + '_' + file.filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(file_path)
-            
-            # Store the filepath in session
-            session['file_path'] = file_path
-            return jsonify({'success': True, 'message': 'File successfully uploaded!'}), 200
+            # Handle file upload for Vercel (read-only filesystem)
+            if os.environ.get('VERCEL'):
+                # On Vercel, we can't save files, so we'll store the file content in session
+                file_content = file.read()
+                file_data = {
+                    'filename': file.filename,
+                    'content': base64.b64encode(file_content).decode('utf-8'),
+                    'content_type': file.content_type
+                }
+                session['file_data'] = file_data
+                return jsonify({'success': True, 'message': 'File successfully uploaded! (Vercel mode)'}), 200
+            else:
+                # Save the uploaded file to a unique location
+                unique_filename = str(uuid.uuid4()) + '_' + file.filename
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(file_path)
+                
+                # Store the filepath in session
+                session['file_path'] = file_path
+                return jsonify({'success': True, 'message': 'File successfully uploaded!'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -753,15 +782,29 @@ def select_model():
     for name, info in model_options.items():
         model_descriptions[name] = info.get("description", info.get("desc", "No description available"))
     
-    # Get the file path from the session - using consistent naming
-    file_path = session.get('file_path')
-    if not file_path or not os.path.exists(file_path):
-        flash("Please upload a dataset first", "error")
-        return redirect(url_for('upload'))
+            # Get the file data from the session - handle both Vercel and local modes
+        file_path = session.get('file_path')
+        file_data = session.get('file_data')
+        
+        if os.environ.get('VERCEL'):
+            # On Vercel, use file data from session
+            if not file_data:
+                flash("Please upload a dataset first", "error")
+                return redirect(url_for('upload'))
+        else:
+            # Local mode - check file path
+            if not file_path or not os.path.exists(file_path):
+                flash("Please upload a dataset first", "error")
+                return redirect(url_for('upload'))
     
     try:
         # Load dataset to get column names
-        df = pd.read_csv(file_path)
+        if os.environ.get('VERCEL') and file_data:
+            # Decode file content from session
+            file_content = base64.b64decode(file_data['content'])
+            df = pd.read_csv(BytesIO(file_content))
+        else:
+            df = pd.read_csv(file_path)
         columns = df.columns.tolist()
         numeric_columns = df.select_dtypes(include=['number']).columns.tolist()
         categorical_columns = df.select_dtypes(include=['object']).columns.tolist()
@@ -839,24 +882,39 @@ def run_model():
             flash("Please select at least one feature.", "error")
             return redirect(url_for('select_model'))
 
-        # Get the data from the session
+        # Get the data from the session - handle both Vercel and local modes
         file_path = session.get('file_path')
+        file_data = session.get('file_data')
         print(f"File path from session: {file_path}")
+        print(f"File data from session: {bool(file_data)}")
         
-        if not file_path:
-            print("ERROR: No file path in session")
-            flash("Dataset not found. Please upload your data again.", "error")
-            return redirect(url_for('upload'))
-            
-        if not os.path.exists(file_path):
-            print(f"ERROR: File does not exist at path: {file_path}")
-            flash("Dataset file not found. Please upload your data again.", "error")
-            return redirect(url_for('upload'))
+        if os.environ.get('VERCEL'):
+            # On Vercel, use file data from session
+            if not file_data:
+                print("ERROR: No file data in session (Vercel mode)")
+                flash("Dataset not found. Please upload your data again.", "error")
+                return redirect(url_for('upload'))
+        else:
+            # Local mode - check file path
+            if not file_path:
+                print("ERROR: No file path in session")
+                flash("Dataset not found. Please upload your data again.", "error")
+                return redirect(url_for('upload'))
+                
+            if not os.path.exists(file_path):
+                print(f"ERROR: File does not exist at path: {file_path}")
+                flash("Dataset file not found. Please upload your data again.", "error")
+                return redirect(url_for('upload'))
 
         print("Loading data from file...")
         # Load and prepare the data
         try:
-            data = pd.read_csv(file_path)
+            if os.environ.get('VERCEL') and file_data:
+                # Decode file content from session
+                file_content = base64.b64decode(file_data['content'])
+                data = pd.read_csv(BytesIO(file_content))
+            else:
+                data = pd.read_csv(file_path)
             print(f"Data loaded successfully. Shape: {data.shape}")
             print(f"Columns: {data.columns.tolist()}")
             
@@ -1219,6 +1277,12 @@ def preview_dataset(dataset_name):
     if dataset_name in DATASET_LIBRARY:
         filepath = DATASET_LIBRARY[dataset_name]['preview_path']
         
+        # Handle Vercel's read-only filesystem
+        if os.environ.get('VERCEL'):
+            # On Vercel, we can't read local files, so show a message
+            flash("Dataset preview not available on Vercel deployment. Please download the dataset to view it.", "info")
+            return redirect(url_for('datasets'))
+        
         # Make sure the dataset exists
         if not os.path.exists(filepath):
             ensure_sample_datasets()
@@ -1521,6 +1585,11 @@ def generate_plot(plot_type, data, **kwargs):
 
 # Function to download sample datasets if they don't exist
 def ensure_sample_datasets():
+    # Skip dataset creation on Vercel (read-only filesystem)
+    if os.environ.get('VERCEL'):
+        print("Skipping dataset creation on Vercel (read-only filesystem)")
+        return
+    
     # Create datasets directory if it doesn't exist
     os.makedirs('datasets', exist_ok=True)
     
@@ -1552,6 +1621,10 @@ def ensure_sample_datasets():
 
 # Generic function to create sample datasets
 def create_generic_dataset(filepath, dataset_info):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     
     category = dataset_info.get('category', 'regression')
@@ -1590,6 +1663,10 @@ def create_generic_dataset(filepath, dataset_info):
     df.to_csv(filepath, index=False)
 
 def create_boston_housing_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     df = pd.DataFrame({
         'CRIM': np.random.rand(100) * 100,
@@ -1610,6 +1687,10 @@ def create_boston_housing_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_california_housing_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     df = pd.DataFrame({
         'MedInc': np.random.rand(100) * 15,
@@ -1625,6 +1706,10 @@ def create_california_housing_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_diabetes_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     df = pd.DataFrame({
         'age': np.random.randint(20, 80, 100),
@@ -1642,6 +1727,10 @@ def create_diabetes_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_iris_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     df = pd.DataFrame({
         'sepal_length': np.random.rand(150) * 3 + 4,
@@ -1653,6 +1742,10 @@ def create_iris_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_breast_cancer_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     # Create 30 random features with appropriate names
     data = {}
@@ -1665,6 +1758,10 @@ def create_breast_cancer_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_digits_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     # Create 64 pixel features
     data = {}
@@ -1677,6 +1774,10 @@ def create_digits_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_blobs_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     centers = [[0, 0], [3, 3], [-3, 3]]
     cluster_std = 0.7
@@ -1692,6 +1793,10 @@ def create_blobs_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_moons_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     X, y = make_moons(n_samples=200, noise=0.1, random_state=42)
     
@@ -1703,6 +1808,10 @@ def create_moons_dataset(filepath):
     df.to_csv(filepath, index=False)
 
 def create_circles_dataset(filepath):
+    # Skip on Vercel
+    if os.environ.get('VERCEL'):
+        return
+    
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     X, y = make_circles(n_samples=200, noise=0.05, factor=0.5, random_state=42)
     
@@ -1836,9 +1945,10 @@ def view_session():
         'session_data': session_data
     })
 
-# Create database tables
-with app.app_context():
-    db.create_all()
+# Create database tables only if not on Vercel
+if not os.environ.get('VERCEL'):
+    with app.app_context():
+        db.create_all()
 
 if __name__ == '__main__':
     # Production configuration
@@ -1863,13 +1973,24 @@ if __name__ == '__main__':
             app.logger.setLevel(logging.INFO)
             app.logger.info('ML Playground startup')
     
-    # Ensure uploads directory exists
-    os.makedirs('uploads', exist_ok=True)
-    
-    # Initialize sample datasets
-    with app.app_context():
-        ensure_sample_datasets()
+    # Initialize sample datasets only if not on Vercel
+    if not os.environ.get('VERCEL'):
+        # Ensure uploads directory exists
+        os.makedirs('uploads', exist_ok=True)
+        
+        # Initialize sample datasets
+        with app.app_context():
+            ensure_sample_datasets()
     
     # Run the app
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
+# Add error handlers for better debugging
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('500.html'), 500
