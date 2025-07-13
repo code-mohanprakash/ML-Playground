@@ -58,7 +58,34 @@ A comprehensive Machine Learning web application that allows users to upload dat
 
 ### Production Deployment
 
-#### Vercel Deployment
+#### Option 1: Render (Recommended - Free)
+
+1. **Fork this repository** to your GitHub account
+
+2. **Sign up for Render** at [render.com](https://render.com)
+
+3. **Create a new Web Service**:
+   - Connect your GitHub repository
+   - Render will automatically detect the `render.yaml` configuration
+   - Environment variables will be set automatically
+
+4. **Your app will be live** at `https://your-app-name.onrender.com`
+
+#### Option 2: Railway (Free tier available)
+
+1. **Install Railway CLI**
+   ```bash
+   npm i -g @railway/cli
+   ```
+
+2. **Deploy to Railway**
+   ```bash
+   railway login
+   railway init
+   railway up
+   ```
+
+#### Option 3: Vercel
 
 1. **Install Vercel CLI**
    ```bash
@@ -74,12 +101,35 @@ A comprehensive Machine Learning web application that allows users to upload dat
    - `SECRET_KEY`: Your secret key
    - `FLASK_ENV`: production
 
+#### Option 4: Heroku
+
+1. **Install Heroku CLI**
+   ```bash
+   # macOS
+   brew tap heroku/brew && brew install heroku
+   
+   # Windows
+   # Download from https://devcenter.heroku.com/articles/heroku-cli
+   ```
+
+2. **Deploy to Heroku**
+   ```bash
+   heroku create your-app-name
+   git push heroku main
+   ```
+
+3. **Set environment variables**
+   ```bash
+   heroku config:set FLASK_ENV=production
+   heroku config:set SECRET_KEY=your-secret-key
+   ```
+
 #### Other Platforms
 
 The app is compatible with:
-- Heroku
-- Railway
 - DigitalOcean App Platform
+- Google Cloud Run
+- AWS Elastic Beanstalk
 - Any platform supporting Python/Flask
 
 ## Project Structure
